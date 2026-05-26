@@ -1,9 +1,0 @@
-se realiza con el dataset 5 de Adult Preparacion Ejercicion una regresion multivariable sin usar redes neuronales, solo el codigo
-
-PRIMERA PARTE
-enlace de Git
-https://github.com/RamiroDCuizaM/Examenes/tree/main/Examen%201er%20Parcial
-
-SEGUNDA PARTE 
-Enlace de Git
-https://github.com/RamiroDCuizaM/Examenes/tree/main/Examen%201er%20Parcial/5%20Adult%20(Census%20Income)%20%E2%80%93%20UCI
