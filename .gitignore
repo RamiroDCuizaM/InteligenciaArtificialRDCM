@@ -1,0 +1,13 @@
+venv/
+Lib/
+Scripts/
+include/
+share/
+pyvenv.cfg
+__pycache__/
+.ipynb_checkpoints/
+
+*.csv
+*.zip
+*.pt
+*.pth
