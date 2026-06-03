@@ -11,3 +11,7 @@ __pycache__/
 *.zip
 *.pt
 *.pth
+*.jpg
+*.jpeg
+*.png
+*.pdf
