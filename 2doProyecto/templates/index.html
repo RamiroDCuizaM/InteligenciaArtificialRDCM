@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clasificador de Formaciones</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0a0f1e;
+      color: #e8eaf0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #00e5ff;
+      letter-spacing: 1px;
+    }
+    header p {
+      color: #8892a4;
+      margin-top: 0.4rem;
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: #131929;
+      border: 1px solid #1e2d47;
+      border-radius: 16px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 540px;
+    }
+
+    /* Upload zone */
+    .upload-zone {
+      border: 2px dashed #1e4a7a;
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: #00e5ff;
+      background: #0d1f36;
+    }
+    .upload-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+    }
+    .upload-zone .icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .upload-zone p   { color: #8892a4; font-size: 0.9rem; }
+
+    /* Preview */
+    #preview-wrap { margin-top: 1.2rem; display: none; text-align: center; }
+    #preview-wrap img {
+      max-height: 200px;
+      border-radius: 10px;
+      border: 1px solid #1e2d47;
+    }
+
+    /* Button */
+    button#btn-predecir {
+      margin-top: 1.4rem;
+      width: 100%;
+      padding: 0.85rem;
+      background: #00b4d8;
+      color: #0a0f1e;
+      font-weight: 700;
+      font-size: 1rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button#btn-predecir:hover { background: #00e5ff; }
+    button#btn-predecir:disabled { background: #1e4a7a; color: #8892a4; cursor: not-allowed; }
+
+    /* Resultado */
+    #resultado {
+      margin-top: 1.8rem;
+      display: none;
+    }
+    .badge-clase {
+      display: inline-block;
+      background: #00b4d8;
+      color: #0a0f1e;
+      font-weight: 700;
+      font-size: 0.78rem;
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      margin-bottom: 0.6rem;
+    }
+    .formacion-nombre {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 0.2rem;
+    }
+    .confianza {
+      color: #00e5ff;
+      font-size: 0.9rem;
+      margin-bottom: 1.2rem;
+    }
+    .info-grid {
+      display: grid;
+      gap: 0.8rem;
+    }
+    .info-item {
+      background: #0d1f36;
+      border-left: 3px solid #00b4d8;
+      border-radius: 8px;
+      padding: 0.8rem 1rem;
+    }
+    .info-item .label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #8892a4;
+      margin-bottom: 0.3rem;
+    }
+    .info-item .valor { font-size: 0.92rem; color: #cdd5e0; }
+
+    /* Loading */
+    .spinner {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 3px solid #1e2d47;
+      border-top-color: #00e5ff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⚽ Clasificador de Formaciones</h1>
+  <p>Sube una imagen y el modelo identificará la formación táctica</p>
+</header>
+
+<div class="card">
+  <!-- Upload -->
+  <div class="upload-zone" id="drop-zone">
+    <input type="file" id="input-imagen" accept="image/*" />
+    <div class="icon">📁</div>
+    <p>Arrastra una imagen aquí o <strong style="color:#00e5ff">haz clic</strong> para seleccionar</p>
+    <p style="font-size:0.78rem;margin-top:0.3rem;">PNG, JPG, WEBP</p>
+  </div>
+
+  <!-- Preview -->
+  <div id="preview-wrap">
+    <img id="preview-img" src="" alt="Vista previa" />
+  </div>
+
+  <!-- Botón -->
+  <button id="btn-predecir" disabled>Clasificar formación</button>
+
+  <!-- Resultado -->
+  <div id="resultado">
+    <span class="badge-clase" id="badge-clase"></span>
+    <div class="formacion-nombre" id="res-nombre"></div>
+    <div class="confianza" id="res-confianza"></div>
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="label">Descripción</div>
+        <div class="valor" id="res-descripcion"></div>
+      </div>
+      <div class="info-item">
+        <div class="label">Fortaleza</div>
+        <div class="valor" id="res-fortaleza"></div>
+      </div>
+      <div class="info-item">
+        <div class="label">Enfoque</div>
+        <div class="valor" id="res-enfoque"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const inputImg   = document.getElementById("input-imagen");
+  const dropZone   = document.getElementById("drop-zone");
+  const previewWrap= document.getElementById("preview-wrap");
+  const previewImg = document.getElementById("preview-img");
+  const btnPredecir= document.getElementById("btn-predecir");
+  const resultado  = document.getElementById("resultado");
+
+  let archivoSeleccionado = null;
+
+  function mostrarPreview(file) {
+    archivoSeleccionado = file;
+    const url = URL.createObjectURL(file);
+    previewImg.src = url;
+    previewWrap.style.display = "block";
+    btnPredecir.disabled = false;
+    resultado.style.display = "none";
+  }
+
+  inputImg.addEventListener("change", e => {
+    if (e.target.files[0]) mostrarPreview(e.target.files[0]);
+  });
+
+  // Drag & drop
+  dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("drag-over"); });
+  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
+  dropZone.addEventListener("drop", e => {
+    e.preventDefault(); dropZone.classList.remove("drag-over");
+    if (e.dataTransfer.files[0]) mostrarPreview(e.dataTransfer.files[0]);
+  });
+
+  btnPredecir.addEventListener("click", async () => {
+    if (!archivoSeleccionado) return;
+
+    btnPredecir.innerHTML = '<span class="spinner"></span>Analizando...';
+    btnPredecir.disabled = true;
+
+    const formData = new FormData();
+    formData.append("imagen", archivoSeleccionado);
+
+    try {
+      const resp = await fetch("/predecir", { method: "POST", body: formData });
+      const data = await resp.json();
+
+      if (data.error) { alert("Error: " + data.error); return; }
+
+      document.getElementById("badge-clase").textContent  = `Formación #${data.clase}`;
+      document.getElementById("res-nombre").textContent   = data.nombre;
+      document.getElementById("res-confianza").textContent= `Confianza del modelo: ${data.confianza}%`;
+      document.getElementById("res-descripcion").textContent = data.descripcion;
+      document.getElementById("res-fortaleza").textContent   = data.fortaleza;
+      document.getElementById("res-enfoque").textContent     = data.enfoque;
+
+      resultado.style.display = "block";
+    } catch(err) {
+      alert("Error de conexión con el servidor.");
+    } finally {
+      btnPredecir.innerHTML = "Clasificar formación";
+      btnPredecir.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
